@@ -9,10 +9,25 @@ async function main() {
   if (mode === 'http') {
     const httpServer = http.createServer(async (req, res) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Mcp-Session-Id');
+      res.setHeader('MCP-Protocol-Version', '2025-06-18');
 
       if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+
+      if (req.method === 'GET') {
+        res.setHeader('Allow', 'POST');
+        res.writeHead(405);
+        res.end();
+        return;
+      }
+
+      if (req.method === 'HEAD') {
+        res.setHeader('MCP-Protocol-Version', '2025-06-18');
         res.writeHead(200);
         res.end();
         return;
