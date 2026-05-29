@@ -7,24 +7,30 @@ const mode = process.env.TRANSPORT || 'stdio';
 
 async function main() {
   if (mode === 'http') {
-    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-    
     const httpServer = http.createServer(async (req, res) => {
-      // Handle CORS
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Mcp-Session-Id');
+
       if (req.method === 'OPTIONS') {
         res.writeHead(200);
         res.end();
         return;
       }
 
-      await transport.handleRequest(req, res);
+      try {
+        const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+        await server.connect(transport);
+        await transport.handleRequest(req, res);
+      } catch (err) {
+        console.error('Request error:', err);
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: 'Internal server error' }));
+        }
+      }
     });
 
-    await server.connect(transport);
     const port = process.env.PORT || 8080;
     httpServer.listen(port, () => {
       console.error(`Loxo MCP Server running on HTTP port ${port}`);
